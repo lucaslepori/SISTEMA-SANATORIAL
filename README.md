@@ -1,4 +1,4 @@
-# Sistema de gestión clínica
+# Sistema sanatorial
 
 Sistema nuevo que reemplaza por módulos a Geclisa. Empieza por pacientes; siguen turnos e historia clínica.
 
