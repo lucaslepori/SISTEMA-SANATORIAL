@@ -9,6 +9,7 @@
     <ProjectReference Include="..\Modulos\SistemaGestion.Pacientes\SistemaGestion.Pacientes.csproj" />
     <ProjectReference Include="..\Modulos\SistemaGestion.Catalogos\SistemaGestion.Catalogos.csproj" />
     <ProjectReference Include="..\Modulos\SistemaGestion.Turnos\SistemaGestion.Turnos.csproj" />
+    <ProjectReference Include="..\Modulos\SistemaGestion.Rrhh\SistemaGestion.Rrhh.csproj" />
   </ItemGroup>
   <ItemGroup>
     <InternalsVisibleTo Include="SistemaGestion.Tests" />

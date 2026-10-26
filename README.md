@@ -1,6 +1,6 @@
 # Sistema sanatorial
 
-Sistema nuevo que reemplaza por módulos a Geclisa. Módulos actuales: pacientes, catálogos y turnos ambulatorios. Sigue historia clínica.
+Sistema nuevo que reemplaza por módulos a Geclisa. Módulos actuales: pacientes, catálogos, turnos ambulatorios y recursos humanos. Sigue historia clínica.
 
 - **Base de datos:** PostgreSQL 18, con seguridad a nivel de fila por empresa.
 - **Backend:** C# / .NET 10 (LTS) y ASP.NET Core.
@@ -20,6 +20,7 @@ src/SistemaGestion.Importador/  Importa catálogos, agendas, pacientes y turnos 
 src/Modulos/SistemaGestion.Pacientes/  Pacientes (API v1).
 src/Modulos/SistemaGestion.Catalogos/  Profesionales, servicios, especialidades, sedes, consultorios y coberturas.
 src/Modulos/SistemaGestion.Turnos/     Agendas, bloqueos, disponibilidad y turnos ambulatorios.
+src/Modulos/SistemaGestion.Rrhh/       Legajos del personal, licencias y documentación con vencimiento.
 tests/SistemaGestion.Tests/ Pruebas de integración contra un PostgreSQL real.
 docs/                      Decisiones y correspondencia con Geclisa.
 ```
@@ -40,6 +41,10 @@ docs/                      Decisiones y correspondencia con Geclisa.
 | Un paciente no tiene dos turnos superpuestos | Restricción de exclusión en `turnos.turnos` | Integridad |
 | Los turnos cancelados no se borran | Estado `CANCELADO` con motivo; sin permiso `DELETE` | Trazabilidad |
 | Cada agenda la gestiona un solo sistema | `turnos.agendas.gestionada_por` | Convivencia con Geclisa |
+| Los legajos sólo los ven rrhh y administrador, y cada lectura se audita | Chequeo de rol en cada operación de `/api/v1/rrhh` | Ley 25.326 |
+| Una persona, un legajo; un profesional, un legajo | `UNIQUE (empresa_id, cuil)` y `UNIQUE (empresa_id, profesional_id)` en `rrhh.empleados` | No duplicar personas con catálogos |
+| Una persona no tiene dos licencias superpuestas | Restricción de exclusión en `rrhh.licencias` (pedidas o aprobadas) | Integridad |
+| No se guarda el diagnóstico de una licencia por enfermedad | Sólo el tipo; los eventos no llevan el tipo | Dato sensible, Ley 25.326 art. 2 |
 
 ## Usuarios de base
 
@@ -131,6 +136,26 @@ Los horarios viajan en ISO 8601 con desplazamiento (`2026-11-02T09:00:00-03:00`)
 | `POST` | `/api/v1/turnos/{id}/cancelacion` | admision, administrador | Exige motivo e `If-Match`. Sólo turnos reservados o confirmados. |
 | `POST` | `/api/v1/turnos/{id}/estado` | según el estado | Reservado → confirmado → presente → atendido; reservado o confirmado → ausente. Sólo el profesional marca atendido. |
 
+## API v1 de RRHH
+
+Todas las operaciones exigen el rol `rrhh` o `administrador`. En local, el usuario `rrhh.local` tiene el rol `rrhh`. Geclisa no tiene módulo de personal, así que no hay datos que importar. No liquida sueldos.
+
+| Método | Ruta | Notas |
+| --- | --- | --- |
+| `GET`, `POST` | `/api/v1/rrhh/sectores`, `/api/v1/rrhh/puestos` | Nombre repetido: `409`. |
+| `POST` | `/api/v1/rrhh/empleados` | Valida el dígito verificador del CUIL. CUIL o profesional que ya tienen legajo: `409`. |
+| `GET` | `/api/v1/rrhh/empleados?texto=&sectorId=&incluirEgresados=` | Busca por apellido y nombre, legajo o CUIL. Máximo 200. El listado no devuelve CUIL ni datos de contacto. |
+| `GET` | `/api/v1/rrhh/empleados/{id}` | Registra la lectura en la auditoría. |
+| `PUT` | `/api/v1/rrhh/empleados/{id}` | Exige `If-Match`. El legajo y el CUIL no cambian. |
+| `POST` | `/api/v1/rrhh/empleados/{id}/egreso` | Fecha y motivo. Anula las licencias que empiezan después. |
+| `POST` | `/api/v1/rrhh/empleados/{id}/reingreso` | Reactiva el mismo legajo; el período anterior queda en la auditoría. |
+| `POST` | `/api/v1/rrhh/empleados/{id}/licencias` | Tipo y fechas (ambas incluidas). Superpuesta con otra pedida o aprobada: `409`. |
+| `GET` | `/api/v1/rrhh/licencias?empleadoId=&estado=&desde=&hasta=` | Exige un empleado o un rango de fechas. |
+| `POST` | `/api/v1/rrhh/licencias/{id}/resolucion` | `{ "aprobar": true }` o `{ "aprobar": false, "motivoRechazo": "..." }`. Exige `If-Match`. |
+| `POST` | `/api/v1/rrhh/licencias/{id}/anulacion` | Exige `If-Match`. |
+| `GET`, `POST` | `/api/v1/rrhh/empleados/{id}/documentos` | Matrícula, seguro de mala praxis, apto médico, vacunación, capacitación. Renovar es cargar uno nuevo. |
+| `GET` | `/api/v1/rrhh/vencimientos?dias=30` | Último documento de cada tipo y persona activa, vencido o por vencer. |
+
 ## Eventos de integración
 
 | Tipo | Cuándo | Datos |
@@ -141,6 +166,8 @@ Los horarios viajan en ISO 8601 con desplazamiento (`2026-11-02T09:00:00-03:00`)
 | `turnos.turno_cancelado` | Cancelación | El turno, con el motivo |
 | `turnos.turno_estado_cambiado` | Confirmado, presente, atendido o ausente | El turno |
 | `turnos.agenda_gestion_cambiada` | Una agenda pasa de Geclisa al sistema nuevo o al revés | La agenda |
+| `rrhh.empleado_alta`, `rrhh.empleado_modificado`, `rrhh.empleado_egreso`, `rrhh.empleado_reingreso` | Cambios del legajo | Identificación, puesto, fechas y profesional enlazado. Sin CUIL, nacimiento ni contacto. |
+| `rrhh.licencia_aprobada`, `rrhh.licencia_anulada` | Una licencia aprobada, o anulada después de aprobarse | Empleado, profesional (si lo es) y fechas. Sin el tipo de licencia. |
 
 Se envían por `POST` JSON a las URLs de `Publicador:Webhooks`. La entrega es "al menos una vez": el suscriptor debe ignorar un `id` de evento que ya procesó.
 
@@ -158,3 +185,4 @@ Se envían por `POST` JSON a las URLs de `Publicador:Webhooks`. La entrega es "a
 - Proveedor de identidad (Keycloak) y doble factor para profesionales.
 - Puente con Geclisa: el importador hace una carga (repetible); falta la sincronización continua y probarlo contra una copia real. Ver [docs/turnos-geclisa.md](docs/turnos-geclisa.md).
 - Fachada FHIR para la Red Nacional de Interoperabilidad.
+- RRHH: que turnos consuma `rrhh.licencia_aprobada` y bloquee la agenda del profesional; saldo de vacaciones (art. 150 LCT y convenio); guardias y fichadas; integración con el sistema de liquidación de sueldos.
