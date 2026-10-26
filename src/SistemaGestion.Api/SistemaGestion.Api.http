@@ -1,0 +1,24 @@
+# Pruebas manuales con la extensión REST Client (VS Code) o desde Visual Studio / Rider.
+# Requiere haber corrido deploy/datos-desarrollo.sql.
+@api = http://localhost:5080
+@empresa = 0192f000-0000-7000-8000-000000000001
+@usuario = admision.local
+
+POST {{api}}/api/v1/pacientes
+Content-Type: application/json
+X-Empresa-Id: {{empresa}}
+X-Usuario-Sujeto: {{usuario}}
+
+{
+  "apellidos": "Pérez",
+  "nombres": "Ana María",
+  "fechaNacimiento": "1985-04-12",
+  "sexoRegistral": "F",
+  "telefono": "+54 11 5555-0000",
+  "identificadores": [{ "sistema": "DNI", "valor": "31555222" }]
+}
+
+###
+GET {{api}}/api/v1/pacientes?documento=31555222
+X-Empresa-Id: {{empresa}}
+X-Usuario-Sujeto: {{usuario}}

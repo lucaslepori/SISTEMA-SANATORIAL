@@ -1,0 +1,13 @@
+<Project Sdk="Microsoft.NET.Sdk.Web">
+  <ItemGroup>
+    <PackageReference Include="Microsoft.AspNetCore.OpenApi" />
+    <PackageReference Include="Microsoft.AspNetCore.Authentication.JwtBearer" />
+  </ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\SistemaGestion.Compartido\SistemaGestion.Compartido.csproj" />
+    <ProjectReference Include="..\Modulos\SistemaGestion.Pacientes\SistemaGestion.Pacientes.csproj" />
+  </ItemGroup>
+  <ItemGroup>
+    <InternalsVisibleTo Include="SistemaGestion.Pacientes.Tests" />
+  </ItemGroup>
+</Project>

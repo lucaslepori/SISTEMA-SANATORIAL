@@ -1,0 +1,15 @@
+# Entorno local: PostgreSQL 18.
+#   docker compose up -d
+services:
+  db:
+    image: postgres:18
+    environment:
+      POSTGRES_DB: sistema_gestion
+      POSTGRES_USER: sg_admin
+      POSTGRES_PASSWORD: sg_admin_local
+    ports:
+      - "5432:5432"
+    volumes:
+      - datos:/var/lib/postgresql
+volumes:
+  datos:
