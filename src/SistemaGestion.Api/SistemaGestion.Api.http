@@ -22,3 +22,20 @@ X-Usuario-Sujeto: {{usuario}}
 GET {{api}}/api/v1/pacientes?documento=31555222
 X-Empresa-Id: {{empresa}}
 X-Usuario-Sujeto: {{usuario}}
+
+### Horarios libres de la agenda de ejemplo (lunes y miércoles 9 a 12)
+GET {{api}}/api/v1/turnos/disponibilidad?profesionalId=0192f000-0000-7000-8000-0000000000b6&desde=2026-11-02&hasta=2026-11-06
+X-Empresa-Id: {{empresa}}
+X-Usuario-Sujeto: {{usuario}}
+
+### Dar un turno (reemplazar pacienteId por el id devuelto al crear el paciente)
+POST {{api}}/api/v1/turnos
+Content-Type: application/json
+X-Empresa-Id: {{empresa}}
+X-Usuario-Sujeto: {{usuario}}
+
+{
+  "agendaId": "0192f000-0000-7000-8000-0000000000c1",
+  "pacienteId": "00000000-0000-0000-0000-000000000000",
+  "inicio": "2026-11-02T09:20:00-03:00"
+}

@@ -3,7 +3,7 @@ using Microsoft.AspNetCore.Mvc.Testing;
 using Npgsql;
 using SistemaGestion.Migraciones;
 
-namespace SistemaGestion.Pacientes.Tests;
+namespace SistemaGestion.Tests;
 
 /// <summary>
 /// Crea una base PostgreSQL nueva por corrida, aplica las migraciones reales y levanta la API.

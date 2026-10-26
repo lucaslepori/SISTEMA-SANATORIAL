@@ -6,8 +6,10 @@
   <ItemGroup>
     <ProjectReference Include="..\SistemaGestion.Compartido\SistemaGestion.Compartido.csproj" />
     <ProjectReference Include="..\Modulos\SistemaGestion.Pacientes\SistemaGestion.Pacientes.csproj" />
+    <ProjectReference Include="..\Modulos\SistemaGestion.Catalogos\SistemaGestion.Catalogos.csproj" />
+    <ProjectReference Include="..\Modulos\SistemaGestion.Turnos\SistemaGestion.Turnos.csproj" />
   </ItemGroup>
   <ItemGroup>
-    <InternalsVisibleTo Include="SistemaGestion.Pacientes.Tests" />
+    <InternalsVisibleTo Include="SistemaGestion.Tests" />
   </ItemGroup>
 </Project>

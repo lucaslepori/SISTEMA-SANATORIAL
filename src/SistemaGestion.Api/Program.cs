@@ -4,7 +4,9 @@ using Npgsql;
 using SistemaGestion.Compartido;
 using SistemaGestion.Compartido.Eventos;
 using SistemaGestion.Compartido.Identidad;
+using SistemaGestion.Catalogos;
 using SistemaGestion.Pacientes;
+using SistemaGestion.Turnos;
 
 var builder = WebApplication.CreateBuilder(args);
 var config = builder.Configuration;
@@ -69,6 +71,8 @@ app.MapGet("/salud", async (OrigenesBd bd, CancellationToken ct) =>
 });
 
 app.MapModuloPacientes();
+app.MapModuloCatalogos();
+app.MapModuloTurnos();
 
 app.Run();
 
