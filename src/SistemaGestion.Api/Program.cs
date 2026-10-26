@@ -1,6 +1,7 @@
 using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Npgsql;
+using Scalar.AspNetCore;
 using SistemaGestion.Compartido;
 using SistemaGestion.Compartido.Eventos;
 using SistemaGestion.Compartido.Identidad;
@@ -29,6 +30,8 @@ if (modoAuth == AutenticacionDesarrollo.Esquema)
 {
     if (!builder.Environment.IsDevelopment())
         throw new InvalidOperationException("La autenticación de desarrollo no se puede usar fuera del entorno Development.");
+    // Sólo en desarrollo: usuario y empresa por defecto para probar desde el navegador.
+    builder.Services.Configure<OpcionesDesarrollo>(config.GetSection("Autenticacion:Desarrollo"));
     builder.Services.AddAuthentication(AutenticacionDesarrollo.Esquema)
         .AddScheme<AuthenticationSchemeOptions, AutenticacionDesarrollo>(AutenticacionDesarrollo.Esquema, null);
 }
@@ -61,7 +64,11 @@ app.UseAuthentication();
 app.UseMiddleware<ResolverContextoMiddleware>();
 
 if (app.Environment.IsDevelopment())
+{
     app.MapOpenApi();
+    // Pantalla para probar la API desde el navegador: http://localhost:5080/scalar
+    app.MapScalarApiReference();
+}
 
 app.MapGet("/salud", async (OrigenesBd bd, CancellationToken ct) =>
 {

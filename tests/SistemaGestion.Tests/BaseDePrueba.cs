@@ -61,6 +61,9 @@ public sealed class BaseDePrueba : IAsyncLifetime
             b.UseSetting("ConnectionStrings:Worker", CadenaWorker);
             b.UseSetting("Autenticacion:Modo", "Desarrollo");
             b.UseSetting("Publicador:Habilitado", "false");
+            // Las pruebas mandan siempre los encabezados: sin valores por defecto.
+            b.UseSetting("Autenticacion:Desarrollo:UsuarioPorDefecto", "");
+            b.UseSetting("Autenticacion:Desarrollo:EmpresaPorDefecto", "");
         });
     }
 

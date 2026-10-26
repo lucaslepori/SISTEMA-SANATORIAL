@@ -92,6 +92,24 @@ public static partial class Migrador
         return nuevas;
     }
 
+    /// <summary>
+    /// SÓLO PARA EL ENTORNO LOCAL: crea los usuarios de la aplicación con contraseñas conocidas
+    /// y carga los datos de ejemplo. Se puede repetir sin duplicar nada.
+    /// </summary>
+    public static async Task CargarDatosDesarrolloAsync(string cadenaConexion, TextWriter log, CancellationToken ct = default)
+    {
+        var asm = Assembly.GetExecutingAssembly();
+        await using var conexion = new NpgsqlConnection(cadenaConexion);
+        await conexion.OpenAsync(ct);
+        foreach (var nombre in asm.GetManifestResourceNames().Where(n => n.StartsWith("desarrollo.", StringComparison.Ordinal)).Order())
+        {
+            using var lector = new StreamReader(asm.GetManifestResourceStream(nombre)!, Encoding.UTF8);
+            await using var cmd = new NpgsqlCommand(await lector.ReadToEndAsync(ct), conexion);
+            await cmd.ExecuteNonQueryAsync(ct);
+        }
+        await log.WriteLineAsync("Usuarios locales y datos de ejemplo cargados.");
+    }
+
     [GeneratedRegex(@"^V(\d{3})__[a-z0-9_]+\.sql$")]
     private static partial Regex PatronNombre();
 }
