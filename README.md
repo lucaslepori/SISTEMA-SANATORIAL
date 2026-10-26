@@ -15,7 +15,8 @@ db/migraciones/            Scripts SQL versionados (V001__..., V002__...). Nunca
 deploy/                    Creación de usuarios de base y datos de desarrollo.
 src/SistemaGestion.Api/    Programa principal: autenticación, contexto de empresa y registro de módulos.
 src/SistemaGestion.Compartido/  Sesión de base con empresa fijada, auditoría, bandeja de eventos y publicador.
-src/SistemaGestion.Migraciones/ Aplica las migraciones.
+src/SistemaGestion.Migraciones/ Aplica las migraciones (y con --datos-desarrollo, carga usuarios y datos locales).
+src/SistemaGestion.Importador/  Importa catálogos, agendas, pacientes y turnos desde Geclisa (sólo lee Geclisa).
 src/Modulos/SistemaGestion.Pacientes/  Pacientes (API v1).
 src/Modulos/SistemaGestion.Catalogos/  Profesionales, servicios, especialidades, sedes, consultorios y coberturas.
 src/Modulos/SistemaGestion.Turnos/     Agendas, bloqueos, disponibilidad y turnos ambulatorios.
@@ -53,20 +54,33 @@ La aplicación nunca se conecta como dueña de la base.
 ## Correr en local
 
 Requisitos: [.NET 10 SDK](https://dotnet.microsoft.com/download/dotnet/10.0) y PostgreSQL 18 (instalado o con Docker).
+Guía paso a paso para Windows con pgAdmin: [docs/probar-en-windows.md](docs/probar-en-windows.md).
 
 1. Base de datos. Con Docker: `docker compose up -d`. Sin Docker, crear una base `sistema_gestion` en tu PostgreSQL (por ejemplo desde pgAdmin).
-2. Migraciones, con un usuario administrador:
+2. Migraciones, usuarios locales de la aplicación y datos de ejemplo, con un usuario administrador (no hace falta `psql`):
    ```
-   dotnet run --project src/SistemaGestion.Migraciones -- "Host=localhost;Database=sistema_gestion;Username=sg_admin;Password=sg_admin_local"
+   dotnet run --project src/SistemaGestion.Migraciones -- "Host=localhost;Database=sistema_gestion;Username=sg_admin;Password=sg_admin_local" --datos-desarrollo
    ```
-3. Usuarios de la aplicación y datos de prueba:
-   ```
-   psql -h localhost -U sg_admin -d sistema_gestion -f deploy/crear-roles.sql -f deploy/datos-desarrollo.sql
-   ```
-4. API: `dotnet run --project src/SistemaGestion.Api`. Queda en http://localhost:5080. La especificación OpenAPI está en http://localhost:5080/openapi/v1.json.
-5. Probar con `src/SistemaGestion.Api/SistemaGestion.Api.http`.
+   Sin `--datos-desarrollo` sólo aplica las migraciones (es lo que se usa en producción, con `deploy/crear-roles.sql` para los usuarios).
+3. API: `dotnet run --project src/SistemaGestion.Api`. Queda en http://localhost:5080.
+4. Probar desde el navegador en http://localhost:5080/scalar (sólo en Development), o con `src/SistemaGestion.Api/SistemaGestion.Api.http`.
 
-En desarrollo la API acepta el usuario por el encabezado `X-Usuario-Sujeto` en lugar de un token. **Este modo se niega a arrancar fuera del entorno Development.** En producción se configura `Autenticacion:Authority` con el proveedor OpenID Connect (por ejemplo Keycloak).
+En desarrollo la API acepta el usuario por el encabezado `X-Usuario-Sujeto` en lugar de un token, y si no viene
+usa `admin.local` en la empresa de ejemplo (`Autenticacion:Desarrollo` en `appsettings.Development.json`).
+**Este modo se niega a arrancar fuera del entorno Development.** En producción se configura `Autenticacion:Authority` con el proveedor OpenID Connect (por ejemplo Keycloak).
+
+## Importar desde Geclisa
+
+```
+SG_GECLISA="Server=...;Database=...;User Id=lector;Password=...;TrustServerCertificate=true" \
+SG_DB_ADMIN="Host=localhost;Database=sistema_gestion;Username=sg_admin;Password=sg_admin_local" \
+dotnet run --project src/SistemaGestion.Importador -- --empresa <id> [--simular] [--pacientes todos] [--datos-reales]
+```
+
+Sólo hace SELECT en Geclisa (igual, usar un login de sólo lectura). Escribe con el rol `sg_api` y la empresa fijada,
+en una sola transacción, e informa lo que no pudo cargar. Pacientes seudonimizados salvo `--datos-reales`.
+Las agendas quedan con `gestionada_por = GECLISA`. **No está probado contra una base real de Geclisa.**
+Detalle en [docs/probar-en-windows.md](docs/probar-en-windows.md#7-opcional-traer-datos-de-geclisa).
 
 ## Pruebas
 
@@ -142,5 +156,5 @@ Se envían por `POST` JSON a las URLs de `Publicador:Webhooks`. La entrega es "a
 - Turnos: reprogramación, recordatorios, turnos web y práctica del nomenclador.
 - Catálogos: modificación y baja lógica.
 - Proveedor de identidad (Keycloak) y doble factor para profesionales.
-- Puente con Geclisa: importar fichas, catálogos y agendas, y mantenerlos sincronizados. Ver [docs/turnos-geclisa.md](docs/turnos-geclisa.md).
+- Puente con Geclisa: el importador hace una carga (repetible); falta la sincronización continua y probarlo contra una copia real. Ver [docs/turnos-geclisa.md](docs/turnos-geclisa.md).
 - Fachada FHIR para la Red Nacional de Interoperabilidad.

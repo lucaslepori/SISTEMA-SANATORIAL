@@ -11,6 +11,7 @@
   <ItemGroup>
     <ProjectReference Include="..\..\src\SistemaGestion.Api\SistemaGestion.Api.csproj" />
     <ProjectReference Include="..\..\src\SistemaGestion.Migraciones\SistemaGestion.Migraciones.csproj" />
+    <ProjectReference Include="..\..\src\SistemaGestion.Importador\SistemaGestion.Importador.csproj" />
   </ItemGroup>
   <ItemGroup>
     <None Include="..\..\deploy\datos-desarrollo.sql" Link="datos-desarrollo.sql" CopyToOutputDirectory="PreserveNewest" />
