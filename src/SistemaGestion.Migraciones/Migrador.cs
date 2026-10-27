@@ -93,6 +93,30 @@ public static partial class Migrador
     }
 
     /// <summary>
+    /// Crea la base indicada en la cadena si todavía no existe. Se conecta a la base de mantenimiento "postgres".
+    /// </summary>
+    public static async Task CrearBaseSiFaltaAsync(string cadenaConexion, TextWriter log, CancellationToken ct = default)
+    {
+        var datos = new NpgsqlConnectionStringBuilder(cadenaConexion);
+        var nombre = datos.Database;
+        if (string.IsNullOrEmpty(nombre) || !NombreBase().IsMatch(nombre))
+            throw new InvalidOperationException($"Nombre de base inválido: '{nombre}'. Usar minúsculas, números y _.");
+        datos.Database = "postgres";
+        await using var conexion = new NpgsqlConnection(datos.ToString());
+        await conexion.OpenAsync(ct);
+        await using (var existe = new NpgsqlCommand("SELECT 1 FROM pg_database WHERE datname = $1", conexion))
+        {
+            existe.Parameters.AddWithValue(nombre);
+            if (await existe.ExecuteScalarAsync(ct) is not null)
+                return;
+        }
+        // El nombre ya se validó: no puede ir como parámetro en CREATE DATABASE.
+        await using (var crear = new NpgsqlCommand($"CREATE DATABASE \"{nombre}\"", conexion))
+            await crear.ExecuteNonQueryAsync(ct);
+        await log.WriteLineAsync($"Base {nombre} creada.");
+    }
+
+    /// <summary>
     /// SÓLO PARA EL ENTORNO LOCAL: crea los usuarios de la aplicación con contraseñas conocidas
     /// y carga los datos de ejemplo. Se puede repetir sin duplicar nada.
     /// </summary>
@@ -109,6 +133,9 @@ public static partial class Migrador
         }
         await log.WriteLineAsync("Usuarios locales y datos de ejemplo cargados.");
     }
+
+    [GeneratedRegex(@"^[a-z_][a-z0-9_]{0,62}$")]
+    private static partial Regex NombreBase();
 
     [GeneratedRegex(@"^V(\d{3})__[a-z0-9_]+\.sql$")]
     private static partial Regex PatronNombre();

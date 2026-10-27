@@ -4,9 +4,14 @@ DO $$
 BEGIN
     IF NOT EXISTS (SELECT FROM pg_roles WHERE rolname = 'sg_api_login') THEN
         CREATE ROLE sg_api_login LOGIN NOBYPASSRLS PASSWORD 'sg_api_local';
+    ELSE
+        -- Si ya existía (por ejemplo, creado a mano con otra contraseña), se deja con la que espera la API local.
+        ALTER ROLE sg_api_login PASSWORD 'sg_api_local';
     END IF;
     IF NOT EXISTS (SELECT FROM pg_roles WHERE rolname = 'sg_worker_login') THEN
         CREATE ROLE sg_worker_login LOGIN NOBYPASSRLS PASSWORD 'sg_worker_local';
+    ELSE
+        ALTER ROLE sg_worker_login PASSWORD 'sg_worker_local';
     END IF;
 END
 $$;

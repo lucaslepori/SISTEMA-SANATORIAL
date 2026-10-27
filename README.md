@@ -54,12 +54,12 @@ La aplicación nunca se conecta como dueña de la base.
 ## Correr en local
 
 Requisitos: [.NET 10 SDK](https://dotnet.microsoft.com/download/dotnet/10.0) y PostgreSQL 18 (instalado o con Docker).
-Guía paso a paso para Windows con pgAdmin: [docs/probar-en-windows.md](docs/probar-en-windows.md).
+**En Windows, lo más simple:** `.\iniciar.ps1` en la carpeta del código prepara la base, levanta la API y abre el navegador. Ver [docs/probar-en-windows.md](docs/probar-en-windows.md).
 
 1. Base de datos. Con Docker: `docker compose up -d`. Sin Docker, crear una base `sistema_gestion` en tu PostgreSQL (por ejemplo desde pgAdmin).
 2. Migraciones, usuarios locales de la aplicación y datos de ejemplo, con un usuario administrador (no hace falta `psql`):
    ```
-   dotnet run --project src/SistemaGestion.Migraciones -- "Host=localhost;Database=sistema_gestion;Username=sg_admin;Password=sg_admin_local" --datos-desarrollo
+   dotnet run --project src/SistemaGestion.Migraciones -- "Host=localhost;Database=sistema_gestion;Username=sg_admin;Password=sg_admin_local" --crear-base --datos-desarrollo
    ```
    Sin `--datos-desarrollo` sólo aplica las migraciones (es lo que se usa en producción, con `deploy/crear-roles.sql` para los usuarios).
 3. API: `dotnet run --project src/SistemaGestion.Api`. Queda en http://localhost:5080.
@@ -80,7 +80,7 @@ dotnet run --project src/SistemaGestion.Importador -- --empresa <id> [--simular]
 Sólo hace SELECT en Geclisa (igual, usar un login de sólo lectura). Escribe con el rol `sg_api` y la empresa fijada,
 en una sola transacción, e informa lo que no pudo cargar. Pacientes seudonimizados salvo `--datos-reales`.
 Las agendas quedan con `gestionada_por = GECLISA`. **No está probado contra una base real de Geclisa.**
-Detalle en [docs/probar-en-windows.md](docs/probar-en-windows.md#7-opcional-traer-datos-de-geclisa).
+Detalle en [docs/probar-en-windows.md](docs/probar-en-windows.md#6-opcional-traer-datos-de-geclisa).
 
 ## Pruebas
 

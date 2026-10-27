@@ -1,64 +1,64 @@
 # Probar el módulo de turnos en una PC con Windows
 
-Guía para probar sin `psql`: todo se hace con pgAdmin, PowerShell y el navegador.
-Tiempo estimado: 20 minutos la primera vez.
+Guía para probar sin `psql` ni pgAdmin: un script prepara todo y abre el navegador.
+Tiempo estimado: 15 minutos la primera vez (casi todo es instalar PostgreSQL y .NET).
 
-## 1. Instalar
+## 1. Lo que hace falta instalar una sola vez
 
 1. **PostgreSQL 18** con el instalador de EDB: https://www.postgresql.org/download/windows/ .
-   Trae pgAdmin. Anotá la contraseña que le ponés al usuario `postgres`.
+   Anotá la contraseña que le ponés al usuario `postgres`; el script te la va a pedir.
 2. **.NET 10 SDK**: https://dotnet.microsoft.com/download/dotnet/10.0 (el "SDK", no sólo el "Runtime").
-   Para verificar, en PowerShell: `dotnet --version` tiene que mostrar 10.0.algo.
-3. **El código**: en GitHub Desktop, clonar `lucaslepori/SISTEMA-SANATORIAL` y cambiar a la rama `turnos-ambulatorios`
-   (o descargar el ZIP de esa rama desde GitHub).
+   Si no lo tenés, el script ofrece instalarlo con `winget`.
 
-## 2. Crear la base
+## 2. Bajar el código
 
-En pgAdmin: Servers → PostgreSQL 18 → clic derecho en *Databases* → *Create* → *Database...* → nombre `sistema_gestion` → *Save*.
+Bajá y descomprimí el ZIP de la rama de turnos:
+https://github.com/lucaslepori/SISTEMA-SANATORIAL/archive/refs/heads/turnos-ambulatorios.zip
+(o en GitHub Desktop, cambiá a la rama `turnos-ambulatorios`). La rama `main` todavía no tiene esta pantalla.
 
-## 3. Cargar tablas, usuarios y datos de ejemplo
+## 3. Ejecutar el script
 
-En PowerShell, dentro de la carpeta del código (reemplazá `TU_CLAVE` por la contraseña de `postgres`):
+En la carpeta del código (la que tiene `iniciar.ps1`): clic derecho en un lugar vacío → *Abrir en Terminal*
+(o abrí PowerShell y hacé `cd` a esa carpeta). Después:
 
 ```powershell
-dotnet run --project src\SistemaGestion.Migraciones -- "Host=localhost;Database=sistema_gestion;Username=postgres;Password=TU_CLAVE" --datos-desarrollo
+.\iniciar.ps1
 ```
 
-Tiene que terminar con `Usuarios locales y datos de ejemplo cargados.` Se puede repetir sin problema.
+El script, en orden: revisa que el código sea el correcto, que esté .NET 10 y que PostgreSQL esté andando
+(si el servicio está detenido intenta iniciarlo), te pide la contraseña de `postgres`, crea la base `sistema_gestion`
+con tablas, usuarios locales y datos de ejemplo, levanta la API en otra ventana, espera a que responda y abre
+el navegador en http://localhost:5080/scalar/ . Si algo falla, se detiene y dice qué hacer, en castellano.
+Se puede ejecutar todas las veces que haga falta.
 
-Esto crea:
-
-- Las tablas de los módulos (pacientes, catálogos, turnos, auditoría).
-- Los usuarios de base `sg_api_login` y `sg_worker_login` con contraseñas locales (`sg_api_local`, `sg_worker_local`). **Sólo para tu PC.**
-- Datos de ejemplo: la empresa *Clínica Ejemplo S.A.*, los usuarios `admin.local`, `admision.local` y `medica.local`,
-  un servicio, una especialidad, una sede, un consultorio, la cobertura *Particular*, una profesional (*Dra. Local*)
-  y su agenda de lunes y miércoles de 9 a 12 con turnos de 20 minutos.
-
-## 4. Levantar la API y abrir la pantalla de prueba
+**Si Windows no deja ejecutar el script** ("la ejecución de scripts está deshabilitada" o "no está firmado digitalmente"):
+Windows bloquea por defecto los scripts y, además, los que vienen en un ZIP bajado de internet. Para permitir
+scripts locales sólo en tu usuario y desbloquear éste, en la misma ventana:
 
 ```powershell
+Set-ExecutionPolicy -Scope CurrentUser RemoteSigned
+Unblock-File .\iniciar.ps1
+```
+
+Es la configuración que recomienda Microsoft para desarrollo; se deshace con `Set-ExecutionPolicy -Scope CurrentUser Undefined`.
+
+La API funciona mientras esté abierta la ventana "API Sistema sanatorial". Para apagarla, cerrala.
+Entrás como `admin.local` en *Clínica Ejemplo S.A.* sin hacer nada; para probar con otro usuario, agregá el
+encabezado `X-Usuario-Sujeto: admision.local`. Es un explorador de la API, no la pantalla final del sistema.
+
+Opciones: `.\iniciar.ps1 -PuertoPostgres 5433` si PostgreSQL usa otro puerto; `-Base otro_nombre` para usar otra base.
+
+### Hacerlo a mano (sin el script)
+
+```powershell
+$env:SG_DB_ADMIN = "Host=localhost;Database=sistema_gestion;Username=postgres;Password=TU_CLAVE"
+dotnet run --project src\SistemaGestion.Migraciones -- --crear-base --datos-desarrollo
 dotnet run --project src\SistemaGestion.Api
 ```
 
-Dejá esa ventana de PowerShell abierta: la API funciona mientras el comando sigue corriendo (se corta con Ctrl+C).
-Cuando arrancó bien, las últimas líneas dicen `Now listening on: http://localhost:5080` y `Pantalla de prueba: http://localhost:5080/scalar/`.
+y abrir http://localhost:5080/scalar/ con la ventana de la API abierta.
 
-Abrí http://localhost:5080/scalar/ . Es un explorador de la API (no es la pantalla final del sistema):
-lista cada operación, arma el pedido y muestra la respuesta. Entrás como `admin.local` en *Clínica Ejemplo S.A.*
-sin hacer nada; para probar con otro usuario, agregá el encabezado `X-Usuario-Sujeto: admision.local`.
-
-### Si no abre
-
-| Qué ves | Causa probable | Qué hacer |
-|---|---|---|
-| El navegador dice "no se puede acceder" / `ERR_CONNECTION_REFUSED` | La API no está corriendo: el comando terminó con error o se cerró la ventana | Mirá el error en PowerShell (ver abajo) |
-| PowerShell: `A compatible .NET SDK was not found` | Falta el SDK 10 | Instalar el **SDK** 10 (paso 1) y abrir una ventana nueva |
-| PowerShell: `Project file does not exist` | No estás en la carpeta del código | `cd` a la carpeta que tiene `SistemaGestion.sln` |
-| Página en blanco con error **404** | Estás en la rama `main`, que todavía no tiene esta pantalla | Cambiar a la rama `turnos-ambulatorios` (o bajar el ZIP de esa rama). Si existe la carpeta `src\SistemaGestion.Importador`, estás en la rama correcta |
-| `address already in use` / puerto 5080 ocupado | Ya hay otra API abierta | Cerrar la otra ventana de PowerShell |
-| La pantalla abre pero las operaciones dan **500** | La API no se conecta a la base | Repetir el paso 3 y revisar que PostgreSQL esté iniciado |
-
-## 5. Recorrido sugerido
+## 4. Recorrido sugerido
 
 1. **Catálogos → GET /api/v1/catalogos/profesionales**: aparece la Dra. Local.
 2. **Agendas → GET /api/v1/agendas**: su agenda (id `0192f000-0000-7000-8000-0000000000c1` para los lunes).
@@ -77,7 +77,7 @@ sin hacer nada; para probar con otro usuario, agregá el encabezado `X-Usuario-S
    (la versión del turno, que viene en el campo `version` y en el encabezado `ETag`; sin él responde 428, para que
    dos personas no pisen el mismo cambio). El turno queda cancelado (no se borra) y el horario vuelve a estar libre.
 
-## 6. Ver los datos en pgAdmin
+## 5. Ver los datos en pgAdmin
 
 Clic derecho en `sistema_gestion` → *Query Tool*:
 
@@ -91,7 +91,7 @@ SELECT ocurrido_en, accion, recurso_tipo, detalle FROM auditoria.eventos ORDER B
 
 Como `postgres` es superusuario, ves los datos de todas las empresas. La API, en cambio, sólo ve los de la empresa del pedido.
 
-## 7. (Opcional) Traer datos de Geclisa
+## 6. (Opcional) Traer datos de Geclisa
 
 El importador **sólo lee** Geclisa y escribe en la base nueva. Recomendaciones antes de usarlo:
 
