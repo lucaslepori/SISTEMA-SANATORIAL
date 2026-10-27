@@ -68,6 +68,10 @@ if (app.Environment.IsDevelopment())
     app.MapOpenApi();
     // Pantalla para probar la API desde el navegador: http://localhost:5080/scalar
     app.MapScalarApiReference();
+    // La raíz lleva a la pantalla de prueba, y la consola dice dónde está.
+    app.MapGet("/", () => Results.Redirect("/scalar/")).ExcludeFromDescription();
+    app.Lifetime.ApplicationStarted.Register(() =>
+        app.Logger.LogInformation("Pantalla de prueba: {Url}", string.Join(", ", app.Urls.Select(u => u + "/scalar/"))));
 }
 
 app.MapGet("/salud", async (OrigenesBd bd, CancellationToken ct) =>

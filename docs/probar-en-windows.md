@@ -40,9 +40,23 @@ Esto crea:
 dotnet run --project src\SistemaGestion.Api
 ```
 
-Abrí http://localhost:5080/scalar . Es un explorador de la API (no es la pantalla final del sistema):
+Dejá esa ventana de PowerShell abierta: la API funciona mientras el comando sigue corriendo (se corta con Ctrl+C).
+Cuando arrancó bien, las últimas líneas dicen `Now listening on: http://localhost:5080` y `Pantalla de prueba: http://localhost:5080/scalar/`.
+
+Abrí http://localhost:5080/scalar/ . Es un explorador de la API (no es la pantalla final del sistema):
 lista cada operación, arma el pedido y muestra la respuesta. Entrás como `admin.local` en *Clínica Ejemplo S.A.*
 sin hacer nada; para probar con otro usuario, agregá el encabezado `X-Usuario-Sujeto: admision.local`.
+
+### Si no abre
+
+| Qué ves | Causa probable | Qué hacer |
+|---|---|---|
+| El navegador dice "no se puede acceder" / `ERR_CONNECTION_REFUSED` | La API no está corriendo: el comando terminó con error o se cerró la ventana | Mirá el error en PowerShell (ver abajo) |
+| PowerShell: `A compatible .NET SDK was not found` | Falta el SDK 10 | Instalar el **SDK** 10 (paso 1) y abrir una ventana nueva |
+| PowerShell: `Project file does not exist` | No estás en la carpeta del código | `cd` a la carpeta que tiene `SistemaGestion.sln` |
+| Página en blanco con error **404** | Estás en la rama `main`, que todavía no tiene esta pantalla | Cambiar a la rama `turnos-ambulatorios` (o bajar el ZIP de esa rama). Si existe la carpeta `src\SistemaGestion.Importador`, estás en la rama correcta |
+| `address already in use` / puerto 5080 ocupado | Ya hay otra API abierta | Cerrar la otra ventana de PowerShell |
+| La pantalla abre pero las operaciones dan **500** | La API no se conecta a la base | Repetir el paso 3 y revisar que PostgreSQL esté iniciado |
 
 ## 5. Recorrido sugerido
 
