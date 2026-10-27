@@ -1,6 +1,7 @@
 using System.Security.Claims;
 using Dapper;
 using Microsoft.AspNetCore.Http;
+using Microsoft.Extensions.Options;
 
 namespace SistemaGestion.Compartido.Identidad;
 
@@ -13,7 +14,8 @@ public sealed class ResolverContextoMiddleware(RequestDelegate siguiente)
 {
     public const string EncabezadoEmpresa = "X-Empresa-Id";
 
-    public async Task InvokeAsync(HttpContext http, ContextoSolicitud contexto, OrigenesBd origenes)
+    public async Task InvokeAsync(
+        HttpContext http, ContextoSolicitud contexto, OrigenesBd origenes, IOptions<OpcionesDesarrollo> desarrollo)
     {
         if (!http.Request.Path.StartsWithSegments("/api"))
         {
@@ -28,7 +30,10 @@ public sealed class ResolverContextoMiddleware(RequestDelegate siguiente)
             return;
         }
 
-        if (!Guid.TryParse(http.Request.Headers[EncabezadoEmpresa], out var empresaId))
+        var empresa = http.Request.Headers[EncabezadoEmpresa].ToString();
+        if (string.IsNullOrWhiteSpace(empresa))
+            empresa = desarrollo.Value.EmpresaPorDefecto ?? "";
+        if (!Guid.TryParse(empresa, out var empresaId))
         {
             await Results.Problem(statusCode: 400, title: $"Falta el encabezado {EncabezadoEmpresa}").ExecuteAsync(http);
             return;

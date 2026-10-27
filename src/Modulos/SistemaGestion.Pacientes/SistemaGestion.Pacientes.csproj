@@ -6,6 +6,6 @@
     <ProjectReference Include="..\..\SistemaGestion.Compartido\SistemaGestion.Compartido.csproj" />
   </ItemGroup>
   <ItemGroup>
-    <InternalsVisibleTo Include="SistemaGestion.Pacientes.Tests" />
+    <InternalsVisibleTo Include="SistemaGestion.Tests" />
   </ItemGroup>
 </Project>

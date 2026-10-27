@@ -1,0 +1,2 @@
+# Los scripts de Windows con fin de línea de Windows.
+*.ps1 text eol=crlf

@@ -3,8 +3,9 @@ using System.Net.Http.Json;
 using Microsoft.Extensions.DependencyInjection;
 using Npgsql;
 using SistemaGestion.Compartido.Eventos;
+using SistemaGestion.Pacientes;
 
-namespace SistemaGestion.Pacientes.Tests;
+namespace SistemaGestion.Tests;
 
 [Collection(ColeccionBase.Nombre)]
 public sealed class PacientesApiTests(BaseDePrueba bd)

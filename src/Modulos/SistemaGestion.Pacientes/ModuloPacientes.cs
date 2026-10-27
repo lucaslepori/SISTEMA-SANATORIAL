@@ -111,14 +111,5 @@ public static class ModuloPacientes
 
     private static DateOnly Hoy(TimeProvider reloj) => DateOnly.FromDateTime(reloj.GetLocalNow().DateTime);
 
-    private static IResult ConVersion(IResult resultado, int version) => new ConEncabezado(resultado, "ETag", $"\"{version}\"");
-
-    private sealed class ConEncabezado(IResult interno, string nombre, string valor) : IResult
-    {
-        public Task ExecuteAsync(HttpContext http)
-        {
-            http.Response.Headers[nombre] = valor;
-            return interno.ExecuteAsync(http);
-        }
-    }
+    private static IResult ConVersion(IResult resultado, int version) => Respuestas.ConVersion(resultado, version);
 }
