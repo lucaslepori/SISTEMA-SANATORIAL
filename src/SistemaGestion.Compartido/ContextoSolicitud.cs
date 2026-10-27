@@ -33,4 +33,5 @@ public static class Roles
     public const string Administrador = "administrador";
     public const string Admision = "admision";
     public const string Profesional = "profesional";
+    public const string Rrhh = "rrhh";
 }

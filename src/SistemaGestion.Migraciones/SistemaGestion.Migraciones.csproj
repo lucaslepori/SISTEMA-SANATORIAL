@@ -9,5 +9,6 @@
     <EmbeddedResource Include="..\..\db\migraciones\*.sql" LogicalName="migraciones.%(Filename)%(Extension)" />
     <EmbeddedResource Include="..\..\deploy\roles-desarrollo.sql" LogicalName="desarrollo.1-roles.sql" />
     <EmbeddedResource Include="..\..\deploy\datos-desarrollo.sql" LogicalName="desarrollo.2-datos.sql" />
+    <EmbeddedResource Include="..\..\deploy\datos-rrhh.sql" LogicalName="desarrollo.3-rrhh.sql" />
   </ItemGroup>
 </Project>

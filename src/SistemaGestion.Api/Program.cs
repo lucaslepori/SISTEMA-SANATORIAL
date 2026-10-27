@@ -7,6 +7,7 @@ using SistemaGestion.Compartido.Eventos;
 using SistemaGestion.Compartido.Identidad;
 using SistemaGestion.Catalogos;
 using SistemaGestion.Pacientes;
+using SistemaGestion.Rrhh;
 using SistemaGestion.Turnos;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -84,6 +85,7 @@ app.MapGet("/salud", async (OrigenesBd bd, CancellationToken ct) =>
 app.MapModuloPacientes();
 app.MapModuloCatalogos();
 app.MapModuloTurnos();
+app.MapModuloRrhh();
 
 app.Run();
 

@@ -49,6 +49,7 @@ public sealed class BaseDePrueba : IAsyncLifetime
             GRANT sg_worker TO sg_worker_test;
             """);
         await EjecutarAsync(CadenaAdmin, await File.ReadAllTextAsync(Path.Combine(AppContext.BaseDirectory, "datos-desarrollo.sql")));
+        await EjecutarAsync(CadenaAdmin, await File.ReadAllTextAsync(Path.Combine(AppContext.BaseDirectory, "datos-rrhh.sql")));
 
         CadenaApi = new NpgsqlConnectionStringBuilder(CadenaAdmin) { Username = "sg_api_test", Password = ClaveApi }.ToString();
         CadenaWorker = new NpgsqlConnectionStringBuilder(CadenaAdmin) { Username = "sg_worker_test", Password = ClaveWorker }.ToString();

@@ -39,3 +39,25 @@ X-Usuario-Sujeto: {{usuario}}
   "pacienteId": "00000000-0000-0000-0000-000000000000",
   "inicio": "2026-11-02T09:20:00-03:00"
 }
+
+### RRHH: documentación vencida o por vencer en 30 días (usuario rrhh.local)
+GET {{api}}/api/v1/rrhh/vencimientos?dias=30
+X-Empresa-Id: {{empresa}}
+X-Usuario-Sujeto: rrhh.local
+
+### RRHH: buscar legajos
+GET {{api}}/api/v1/rrhh/empleados?texto=Persona
+X-Empresa-Id: {{empresa}}
+X-Usuario-Sujeto: rrhh.local
+
+### RRHH: pedir una licencia para el legajo 1 de ejemplo
+POST {{api}}/api/v1/rrhh/empleados/0192f000-0000-7000-8000-0000000000e1/licencias
+Content-Type: application/json
+X-Empresa-Id: {{empresa}}
+X-Usuario-Sujeto: rrhh.local
+
+{
+  "tipo": "EXAMEN",
+  "desde": "2026-12-15",
+  "hasta": "2026-12-15"
+}

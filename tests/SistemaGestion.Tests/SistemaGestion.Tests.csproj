@@ -15,6 +15,7 @@
   </ItemGroup>
   <ItemGroup>
     <None Include="..\..\deploy\datos-desarrollo.sql" Link="datos-desarrollo.sql" CopyToOutputDirectory="PreserveNewest" />
+    <None Include="..\..\deploy\datos-rrhh.sql" Link="datos-rrhh.sql" CopyToOutputDirectory="PreserveNewest" />
   </ItemGroup>
   <ItemGroup>
     <Using Include="Xunit" />
